@@ -1,124 +1,26 @@
--- [[ Script GUI Pengatur WalkSpeed Client-Side (Jalankan di Executor) ]]
+-- Simulasi: Tingkatkan kecepatan karakter (legal di Studio)
+-- Masukkan di StarterPlayerScripts > LocalScript
 
--- Services
 local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui") -- Atau Players.LocalPlayer.PlayerGui
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
 
--- Player Vars
-local localPlayer = Players.LocalPlayer
-local character = nil
-local humanoid = nil
+local normalSpeed = 16
+local sprintSpeed = 50
 
--- Default speed Roblox
-local DEFAULT_SPEED = 16
+player.CharacterAdded:Connect(function(character)
+	local humanoid = character:WaitForChild("Humanoid")
 
--- --- GUI Creation ---
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "SpeedChangerGui"
-screenGui.ResetOnSpawn = false
+	UserInputService.InputBegan:Connect(function(input, gp)
+		if gp then return end
+		if input.KeyCode == Enum.KeyCode.LeftShift then
+			humanoid.WalkSpeed = sprintSpeed
+		end
+	end)
 
-local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 180, 0, 130) -- Ukuran frame
-mainFrame.Position = UDim2.new(0, 10, 0, 270) -- Posisi di bawah GUI rekam tadi (kira-kira)
-mainFrame.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-mainFrame.BorderSizePixel = 1
-mainFrame.Draggable = true
-mainFrame.Active = true
-mainFrame.Parent = screenGui
-
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Name = "Title"
-titleLabel.Size = UDim2.new(1, 0, 0, 20)
-titleLabel.Position = UDim2.new(0, 0, 0, 0)
-titleLabel.BackgroundTransparency = 1
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.Text = "Pengatur Kecepatan Jalan"
-titleLabel.Font = Enum.Font.SourceSansBold
-titleLabel.TextSize = 14
-titleLabel.Parent = mainFrame
-
-local speedInput = Instance.new("TextBox")
-speedInput.Name = "SpeedInput"
-speedInput.Size = UDim2.new(1, -10, 0, 30)
-speedInput.Position = UDim2.new(0, 5, 0, 25)
-speedInput.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-speedInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedInput.PlaceholderText = "Masukkan Kecepatan..."
-speedInput.Text = tostring(DEFAULT_SPEED) -- Tampilkan speed default awal
-speedInput.ClearTextOnFocus = false
-speedInput.NumbersOnly = true -- Hanya izinkan angka (beberapa executor support ini)
-speedInput.Font = Enum.Font.SourceSans
-speedInput.TextSize = 14
-speedInput.Parent = mainFrame
-
-local applyButton = Instance.new("TextButton")
-applyButton.Name = "ApplyButton"
-applyButton.Size = UDim2.new(1, -10, 0, 30)
-applyButton.Position = UDim2.new(0, 5, 0, 60)
-applyButton.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
-applyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-applyButton.Text = "🚀 Terapkan Kecepatan"
-applyButton.Font = Enum.Font.SourceSansBold
-applyButton.TextSize = 14
-applyButton.Parent = mainFrame
-
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Name = "StatusLabel"
-statusLabel.Size = UDim2.new(1, -10, 0, 30)
-statusLabel.Position = UDim2.new(0, 5, 0, 95)
-statusLabel.BackgroundTransparency = 1
-statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-statusLabel.Text = "Status: Siap (Default: 16)"
-statusLabel.Font = Enum.Font.SourceSans
-statusLabel.TextSize = 12
-statusLabel.TextWrapped = true
-statusLabel.TextYAlignment = Enum.TextYAlignment.Top
-statusLabel.Parent = mainFrame
-
--- Masukkan GUI ke CoreGui
-screenGui.Parent = CoreGui
-
--- --- Logic ---
-local function getHumanoid()
-    character = localPlayer.Character
-    if character then
-        humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            -- Update text box ke speed saat ini jika humanoid ditemukan
-            speedInput.Text = tostring(math.floor(humanoid.WalkSpeed)) -- Bulatkan ke bawah biar rapi
-            return humanoid
-        end
-    end
-    statusLabel.Text = "Status: Menunggu karakter..."
-    return nil
-end
-
--- Panggil getHumanoid pertama kali
-getHumanoid()
--- Terus cek kalau karakter respawn
-localPlayer.CharacterAdded:Connect(function(newCharacter)
-    wait(1) -- Kasih jeda sedikit biar humanoid siap
-    getHumanoid()
-end)
-
-applyButton.MouseButton1Click:Connect(function()
-    local hum = getHumanoid() -- Cek lagi humanoidnya ada gak
-    if not hum then
-        statusLabel.Text = "Status: Karakter tidak ditemukan!"
-        return
-    end
-
-    local speedText = speedInput.Text
-    local speedNumber = tonumber(speedText) -- Coba ubah teks jadi angka
-
-    if speedNumber and speedNumber >= 0 then -- Pastikan angka valid dan tidak negatif
-        hum.WalkSpeed = speedNumber
-        statusLabel.Text = "Status: Kecepatan diatur ke " .. speedNumber
-        print("WalkSpeed diatur ke:", speedNumber)
-    else
-        statusLabel.Text = "Status: Input tidak valid! Masukkan angka."
-        -- Kembalikan teks input ke speed saat ini kalau error
-        speedInput.Text = tostring(math.floor(hum.WalkSpeed))
-    end
+	UserInputService.InputEnded:Connect(function(input)
+		if input.KeyCode == Enum.KeyCode.LeftShift then
+			humanoid.WalkSpeed = normalSpeed
+		end
+	end)
 end)
